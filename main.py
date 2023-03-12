@@ -4,17 +4,26 @@ import pandas as pd
 
 from matplotlib import pyplot as plt
 from include.plotter import Graph
+from include.network import neural_network
+
+# Корректируем данные, обучаем модель
 
 if __name__ == '__main__':
 
     train = pd.read_csv('datasets/train.csv')
-    train = train.drop('ID', axis=1)
+    train = train.drop('ID', axis= 1)
     test = pd.read_csv('datasets/test.csv')
     test = test.drop('ID', axis= 1)
 
+    input_data = train['electricity_consumption']
+
     G = Graph(train, test)
     G.data_transform()
+    train = G.data_revision()
+    train, test = G.data_correct()
     G.correl()
     G.data_print()
-    train, test = G.data_correct()
+
+    NN = neural_network(train, input_data)
+    NN.coefficiets()
     plt.show()
