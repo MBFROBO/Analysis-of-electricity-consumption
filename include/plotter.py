@@ -11,19 +11,25 @@ class Graph:
     """
         Обрабатываем данные, строим графики
     """
-    def __init__(self, data_train = None, data_test = None):
+    def __init__(self, data_train = None, data_test = None, input_data = None):
         self.train = data_train                                                                             # тренировочные данные
-        self.test = data_test                                                                               # Тестовые данные
+        self.test = data_test        
+        self.input = input_data                                                                  # Тестовые данные
         self.names = ['datetime','temperature','var1','pressure','windspeed', 'var2']                       # Список колонок тренировочных данных
 
         self.high = []  # Верхний квантильный уровень
         self.Low = []   # Нижний квантильный уровень
         self.quantiles = {}
+
     def data_correct(self):
-        """
-            Исключим предикторы с минимальной корреляцией по выходному признаку
-        """
-        return self.train.drop('pressure', axis = 1), self.test.drop('pressure', axis = 1)
+        
+        self.train = np.array(self.train).reshape(-1,5).astype('float32')
+        self.test = np.array(self.test).reshape(-1,5).astype('float32')
+
+        if self.input is not None:
+            self.input = np.array(self.input).reshape(-1,1).astype('float32')
+        
+        return self.train, self.test, self.input
     
 
     def data_revision(self):
@@ -79,18 +85,26 @@ class Graph:
             bad_index_low_press = self.train.index[np.log(np.array(self.train['pressure'])) < np.mean(self.quantiles['pressure'][1])].tolist()
             print('Индексы для удаления по нижней границе, длина: ', len(bad_index_low_press))
 
-            self.train.drop(bad_index_high_press)
-            self.train.drop(bad_index_low_press)
+            self.input = self.input.drop(bad_index_high_press)
+            self.input = self.input.drop(bad_index_low_press)
+
+            self.train = self.train.drop(bad_index_high_press)
+            self.train = self.train.drop(bad_index_low_press)
 
             bad_index_high_wind = self.train.index[np.log(np.array(self.train['windspeed'])) > np.mean(self.quantiles['windspeed'][0])].tolist()
             print('Индексы для удаления по верхней границе,длина: ', len(bad_index_high_wind))
             bad_index_low_wind = self.train.index[np.log(np.array(self.train['windspeed'])) < min(self.quantiles['windspeed'][1])].tolist()
             print('Индексы для удаления по нижней границе, длина: ', len(bad_index_low_wind))
             
-            self.train.drop(bad_index_high_wind)
-            self.train.drop(bad_index_low_wind)
+            self.train = self.train.drop(bad_index_high_wind)
+            self.train = self.train.drop(bad_index_low_wind)
+
+            self.input = self.input.drop(bad_index_high_wind)
+            self.input = self.input.drop(bad_index_low_wind)
+
             # Сбрасываем индексы
-            self.train.reset_index(drop= True , inplace= True)
+            self.train = self.train.reset_index(drop= True)
+            self.input = self.input.reset_index(drop = True)
             # Строим квантильные прямые
             plt.figure('pressure')
 
@@ -211,8 +225,13 @@ class Graph:
     def data_print(self):
 
         print('-------------Train data---------------')
-        print(self.train.tail(5))
+        print(self.train, 'Длинна: ', len(self.train), 'Размерность: ',np.size(self.train))
         print('-------------End data-----------------')
+
+        print('-------------Input data---------------')
+        print(self.input, 'Длина: ', len(self.input), 'Размерность: ', np.size(self.input))
+        print('-------------End data-----------------')
+
         print('-------------Test data---------------')
-        print(self.test.tail(5))
+        print(self.test, 'Длина: ', len(self.test), 'Размерность: ', np.size(self.test))
         print('-------------End data-----------------')
