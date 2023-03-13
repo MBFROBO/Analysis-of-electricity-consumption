@@ -17,13 +17,16 @@ if __name__ == '__main__':
 
     input_data = train['electricity_consumption']
 
-    G = Graph(train, test)
+    G = Graph(train, test, input_data)
     G.data_transform()
     train = G.data_revision()
-    train, test = G.data_correct()
+    train, test, input_data = G.data_correct()
     G.correl()
     G.data_print()
 
-    NN = neural_network(train, input_data)
+    NN = neural_network(train, input_data, test)
     NN.coefficiets()
+    NN.learn_model()
+    NN.loss_plot()
+    NN.accurancy_test()
     plt.show()
